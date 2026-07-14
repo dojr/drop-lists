@@ -1,5 +1,6 @@
 package com.droplists;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import javax.inject.Inject;
@@ -24,21 +25,25 @@ class MenuEntrySwapService
 	@Inject
 	private Client client;
 
-	private final Set<Integer> activeItemIds = new HashSet<>();
+	// Written on the Swing EDT (via applyActiveItems/clearAll) and read on the
+	// client thread every tick in onPostMenuSort. Swapped atomically as an
+	// immutable snapshot so reads never need to lock.
+	private volatile Set<Integer> activeItemIds = Collections.emptySet();
 
 	void applyActiveItems(Set<Integer> itemIds)
 	{
-		activeItemIds.clear();
+		Set<Integer> mapped = new HashSet<>();
 		for (Integer itemId : itemIds)
 		{
-			activeItemIds.add(ItemVariationMapping.map(itemId));
+			mapped.add(ItemVariationMapping.map(itemId));
 		}
+		activeItemIds = Collections.unmodifiableSet(mapped);
 		log.debug("Active drop-swap items: {}", activeItemIds);
 	}
 
 	void clearAll()
 	{
-		activeItemIds.clear();
+		activeItemIds = Collections.emptySet();
 	}
 
 	boolean isActive(int itemId)
