@@ -6,11 +6,17 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.Toolkit;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -38,6 +44,7 @@ import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.PluginPanel;
 import net.runelite.http.api.item.ItemPrice;
 
+@Slf4j
 class DropListsPanel extends PluginPanel
 {
 	private enum View
@@ -148,8 +155,17 @@ class DropListsPanel extends PluginPanel
 			openEditor(list.getId());
 		});
 
+		JButton importButton = new JButton("Import list");
+		importButton.setToolTipText("Create a list from copied clipboard data");
+		importButton.addActionListener(e -> importListFromClipboard());
+
+		JPanel buttons = new JPanel(new DynamicGridLayout(0, 1, 0, 4));
+		buttons.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		buttons.add(newListButton);
+		buttons.add(importButton);
+
 		header.add(title, BorderLayout.NORTH);
-		header.add(newListButton, BorderLayout.SOUTH);
+		header.add(buttons, BorderLayout.SOUTH);
 
 		JPanel listsContainer = new JPanel(new DynamicGridLayout(0, 1, 0, 4));
 		listsContainer.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -224,6 +240,9 @@ class DropListsPanel extends PluginPanel
 		enabledBox.addActionListener(e -> dropListManager.setListEnabled(list.getId(), enabledBox.isSelected()));
 
 		JPopupMenu popupMenu = new JPopupMenu();
+		JMenuItem copyItem = new JMenuItem("Copy list");
+		copyItem.addActionListener(e -> copyListToClipboard(list.getId()));
+
 		JMenuItem deleteItem = new JMenuItem("Delete list");
 		deleteItem.addActionListener(e ->
 		{
@@ -234,6 +253,7 @@ class DropListsPanel extends PluginPanel
 			}
 			rebuild();
 		});
+		popupMenu.add(copyItem);
 		popupMenu.add(deleteItem);
 		row.setComponentPopupMenu(popupMenu);
 		editButton.setComponentPopupMenu(popupMenu);
@@ -361,6 +381,42 @@ class DropListsPanel extends PluginPanel
 	{
 		view = View.OVERVIEW;
 		rebuild();
+	}
+
+	private void copyListToClipboard(String listId)
+	{
+		String data = dropListManager.exportList(listId);
+		if (data == null)
+		{
+			return;
+		}
+
+		Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(data), null);
+	}
+
+	private void importListFromClipboard()
+	{
+		String data;
+		try
+		{
+			data = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
+		}
+		catch (UnsupportedFlavorException | IOException ex)
+		{
+			log.debug("Failed to read clipboard for list import", ex);
+			return;
+		}
+
+		if (data == null || data.trim().isEmpty())
+		{
+			return;
+		}
+
+		DropList created = dropListManager.importList(data.trim());
+		if (created != null)
+		{
+			openEditor(created.getId());
+		}
 	}
 
 	private void saveListName()

@@ -1,6 +1,7 @@
 package com.droplists;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -59,6 +60,38 @@ class DropListManager
 	DropList createList(String name)
 	{
 		DropList list = new DropList(UUID.randomUUID().toString(), name, new ArrayList<>(), false);
+		lists.add(list);
+		save();
+		return list;
+	}
+
+	String exportList(String listId)
+	{
+		return findList(listId).map(gson::toJson).orElse(null);
+	}
+
+	DropList importList(String data)
+	{
+		DropList parsed;
+		try
+		{
+			parsed = gson.fromJson(data, DropList.class);
+		}
+		catch (JsonSyntaxException ex)
+		{
+			return null;
+		}
+
+		if (parsed == null || parsed.getName() == null)
+		{
+			return null;
+		}
+
+		List<Integer> items = parsed.getItemIds() != null
+			? new ArrayList<>(parsed.getItemIds())
+			: new ArrayList<>();
+
+		DropList list = new DropList(UUID.randomUUID().toString(), parsed.getName(), items, false);
 		lists.add(list);
 		save();
 		return list;
