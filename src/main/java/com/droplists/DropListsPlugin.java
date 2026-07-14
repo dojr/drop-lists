@@ -20,6 +20,7 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
+import net.runelite.client.util.ImageUtil;
 
 @Slf4j
 @PluginDescriptor(
@@ -58,7 +59,7 @@ public class DropListsPlugin extends Plugin
 
 		panel = injector.getInstance(DropListsPanel.class);
 
-		final BufferedImage icon = DropListsPanel.createIcon();
+		final BufferedImage icon = ImageUtil.loadImageResource(DropListsPlugin.class, "icon.png");
 		navButton = NavigationButton.builder()
 			.tooltip("Drop Lists")
 			.icon(icon)

@@ -1,15 +1,19 @@
 package com.droplists;
 
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.swing.BorderFactory;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -41,6 +45,10 @@ class DropListsPanel extends PluginPanel
 		OVERVIEW,
 		EDITOR
 	}
+
+	private static final Color CHECK_COLOR = new Color(218, 165, 32);
+	private static final Icon UNCHECKED_ICON = checkboxIcon(false);
+	private static final Icon CHECKED_ICON = checkboxIcon(true);
 
 	private final DropListManager dropListManager;
 	private final ItemManager itemManager;
@@ -175,20 +183,28 @@ class DropListsPanel extends PluginPanel
 	private JPanel buildOverviewRow(DropList list)
 	{
 		JPanel row = new JPanel(new BorderLayout(6, 0));
-		row.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		row.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		row.setBorder(new EmptyBorder(2, 6, 2, 6));
 
 		int itemCount = list.getItemIds().size();
 		JButton editButton = new JButton("<html><b>" + escape(list.getName()) + "</b><br>"
 			+ itemCount + (itemCount == 1 ? " item" : " items") + "</html>");
 		editButton.setHorizontalAlignment(SwingConstants.LEFT);
-		editButton.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		editButton.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		editButton.setFocusPainted(false);
+		editButton.setContentAreaFilled(false);
+		editButton.setOpaque(false);
+		editButton.setBorder(BorderFactory.createCompoundBorder(
+			BorderFactory.createLineBorder(ColorScheme.MEDIUM_GRAY_COLOR, 1),
+			new EmptyBorder(4, 6, 4, 6)));
 		editButton.setToolTipText("Edit this list's items");
 		editButton.addActionListener(e -> openEditor(list.getId()));
 
 		JCheckBox enabledBox = new JCheckBox();
-		enabledBox.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		enabledBox.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		enabledBox.setOpaque(false);
+		enabledBox.setIcon(UNCHECKED_ICON);
+		enabledBox.setSelectedIcon(CHECKED_ICON);
 		enabledBox.setSelected(list.isEnabled());
 		enabledBox.setToolTipText("Toggle left-click drop on/off");
 		enabledBox.addActionListener(e -> dropListManager.setListEnabled(list.getId(), enabledBox.isSelected()));
@@ -208,8 +224,8 @@ class DropListsPanel extends PluginPanel
 		row.setComponentPopupMenu(popupMenu);
 		editButton.setComponentPopupMenu(popupMenu);
 
+		row.add(enabledBox, BorderLayout.WEST);
 		row.add(editButton, BorderLayout.CENTER);
-		row.add(enabledBox, BorderLayout.EAST);
 		return row;
 	}
 
@@ -532,16 +548,27 @@ class DropListsPanel extends PluginPanel
 		}
 	}
 
-	static BufferedImage createIcon()
+	private static Icon checkboxIcon(boolean checked)
 	{
-		BufferedImage image = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+		int size = 14;
+		BufferedImage image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = image.createGraphics();
-		g.setColor(new Color(196, 62, 62));
-		g.fillRect(2, 2, 12, 12);
-		g.setColor(Color.WHITE);
-		g.drawLine(5, 8, 11, 8);
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+		g.setColor(ColorScheme.DARK_GRAY_COLOR);
+		g.fillRoundRect(0, 0, size - 1, size - 1, 4, 4);
+		g.setColor(ColorScheme.MEDIUM_GRAY_COLOR);
+		g.drawRoundRect(0, 0, size - 1, size - 1, 4, 4);
+
+		if (checked)
+		{
+			g.setColor(CHECK_COLOR);
+			g.setStroke(new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g.drawPolyline(new int[]{3, 6, 11}, new int[]{7, 10, 3}, 3);
+		}
+
 		g.dispose();
-		return image;
+		return new ImageIcon(image);
 	}
 
 	private final class NameFocusListener extends java.awt.event.FocusAdapter
