@@ -190,7 +190,7 @@ class DropListsPanel extends PluginPanel
 		JButton editButton = new JButton("<html><b>" + escape(list.getName()) + "</b><br>"
 			+ itemCount + (itemCount == 1 ? " item" : " items") + "</html>");
 		editButton.setHorizontalAlignment(SwingConstants.LEFT);
-		editButton.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		editButton.setBackground(ColorScheme.DARK_GRAY_HOVER_COLOR);
 		editButton.setFocusPainted(false);
 		editButton.setContentAreaFilled(false);
 		editButton.setOpaque(false);
@@ -199,6 +199,20 @@ class DropListsPanel extends PluginPanel
 			new EmptyBorder(4, 6, 4, 6)));
 		editButton.setToolTipText("Edit this list's items");
 		editButton.addActionListener(e -> openEditor(list.getId()));
+		editButton.addMouseListener(new java.awt.event.MouseAdapter()
+		{
+			@Override
+			public void mouseEntered(java.awt.event.MouseEvent e)
+			{
+				editButton.setContentAreaFilled(true);
+			}
+
+			@Override
+			public void mouseExited(java.awt.event.MouseEvent e)
+			{
+				editButton.setContentAreaFilled(false);
+			}
+		});
 
 		JCheckBox enabledBox = new JCheckBox();
 		enabledBox.setBackground(ColorScheme.DARK_GRAY_COLOR);
