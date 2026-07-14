@@ -271,11 +271,26 @@ class DropListsPanel extends PluginPanel
 			showOverview();
 		});
 
-		JLabel heading = new JLabel("Edit list");
-		heading.setForeground(Color.WHITE);
+		JCheckBox enabledBox = new JCheckBox();
+		enabledBox.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		enabledBox.setOpaque(false);
+		enabledBox.setIcon(UNCHECKED_ICON);
+		enabledBox.setSelectedIcon(CHECKED_ICON);
+		enabledBox.setSelected(list.isEnabled());
+		enabledBox.setToolTipText("Toggle left-click drop on/off");
+		enabledBox.addActionListener(e -> dropListManager.setListEnabled(list.getId(), enabledBox.isSelected()));
+
+		JLabel toggleLabel = new JLabel("Toggle left-click drop on/off");
+		toggleLabel.setFont(FontManager.getRunescapeSmallFont());
+		toggleLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+
+		JPanel togglePanel = new JPanel(new BorderLayout(4, 0));
+		togglePanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		togglePanel.add(toggleLabel, BorderLayout.WEST);
+		togglePanel.add(enabledBox, BorderLayout.EAST);
 
 		header.add(backButton, BorderLayout.WEST);
-		header.add(heading, BorderLayout.CENTER);
+		header.add(togglePanel, BorderLayout.EAST);
 
 		JPanel body = new JPanel(new DynamicGridLayout(0, 1, 0, 6));
 		body.setBackground(ColorScheme.DARK_GRAY_COLOR);
