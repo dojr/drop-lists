@@ -120,6 +120,11 @@ class DropListsPanel extends PluginPanel
 	public void onDeactivate()
 	{
 		panelActive = false;
+		if (view == View.EDITOR)
+		{
+			saveItems();
+			showOverview();
+		}
 	}
 
 	private void rebuild()
